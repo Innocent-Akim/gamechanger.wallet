@@ -44,7 +44,7 @@ These networks are supported:
 - [ARP Radio](https://arpradio.media/): Discover the plethora of music in the Cardano ecosystem, then purchase, play, trade, and more! Created by SudoScientist
 - [Moments](https://www.adamoments.io/): Moments is a decentralized social media platform where creators capture their ideas, share freely, and lock in ownership by minting posts on Cardano. Created by our friend and cherished community member Max Van Rossem.
 - [M2Tec Payments](https://payments.m2tec.nl/): POS payment request generator dapp leveraging on an GCFS on-chain open protocol ( [Code on Github](https://github.com/M2tec/gcfs-payments.m2tec.nl) )
-- [Dandelion Contributor Portal](https://contrib.dandelion.link) (GameChanger V1)
+- [Neon Soup](https://github.com/GameChangerFinance/NeonSoup): Peer-to-peer execution layer for Cardano DeFi with a deep exploration for cypherpunk values: Self-sovereign, P2P DeFi Kernel, shared liquidity, no batchers, UDC open intents, and more. In development.
 
 ### Examples and Boilerplates:
 - ⭐ [Builder Fest 2026 Challenge](https://github.com/GameChangerFinance/builderfest-2026-ticket): Builder Fest 2026 Ticket Sale dapp solved on GCScript DSL intents and an HTML frontend:
@@ -85,6 +85,13 @@ These networks are supported:
     - First dapp on Cardano working from hosted source code stored on-chain. 
     - **The PAB for the web:** Helios smart contract code compiled on-the-fly on GameChanger dapp connections
     - **The big picture behind GameChanger Dapps** explained on-dapp for the Cardano Community
+- [Cardano-Relay](https://github.com/GameChangerFinance/cardano-relay): A Cardano IOT integration on ESP8266, a 32-bit 80 MHz microcontroller in less than 40Kb of RAM
+    - a cryptographically-secured WiFi lamp control, from mobile or desktop
+    - written in C/C++ and GCScript DSL
+    - No middlemen. Direct device - wallet connection
+    - Privacy preserving, device run a cryptographic authorization but without knowing the actual allowed user wallet 
+    - CIP-8 signature flow even using Ledger Nano X to sign
+    - [Announcement on X](https://x.com/GameChangerOk/status/2051667157193265572)
 - [Swap Limit Order](): P2P DeFi Kernel over intents with UDC + GCScript DSL. (Demo coming soon!) 
     - by Agustin Badi in collaboration with Adriano Fiorenza, initially made for a presentation at **Cardano Foundation Dev Office Hours**
 
@@ -116,6 +123,7 @@ These networks are supported:
     - powered by SSI
     - no minting required
 - [DCorps - Digital Companies Registry on Cardano](https://www.lidonation.com/zh/proposals/dcorps-digital-companies-registry-registering-your-catalyst-project-on-chain-f10) (GameChanger V1)
+- [Dandelion Contributor Portal](https://contrib.dandelion.link) (GameChanger V1)
 - Powering crypto events worldwide, like hackatons and classrooms: https://x.com/blockdev_id/status/1875363843758854462
 
 ### Some videos and articles:

@@ -1,0 +1,43 @@
+{
+  "title": "Runtime Assertions",
+  "description": "This example demonstrates how custom runtime assertions can be implemented. Modify the arguments to trigger errors. Explore the Console in Live Debugger for extra information",
+  "type": "script",
+  "exportAs": "AssertionsDemo",
+  "args": {
+    "name": "john doe",
+    "age": 25,
+    "banked": false,
+    "balance": "25"
+  },
+  "run": {
+    "A": {
+      "type": "script",
+      "args": "{get('args')}",
+      "run": {
+        "B": {
+          "type": "script",
+          "args": "{get('args')}",
+          "run": {
+            "C": {
+              "type": "script",
+              "args": "{get('args')}",
+              "run": {
+                "asserts": {
+                  "type": "macro",
+                  "run": {
+                    "name-must-be-string": "{ assert(  isType('string',get('args.name'))                      ,'\"name\" must be a string'                , get('args') )  }",
+                    "balance-must-be-string": "{ assert(  isType('string',get('args.balance'))                   ,'\"balance\" must be a string (bignum)'    , get('args') )  }",
+                    "age-must-be-number": "{ assert(  isType('number',get('args.age'))                       ,'\"age\" must be a number'                 , get('args') )  }",
+                    "banked-must-be-boolean": "{ assert(  isType('boolean',get('args.banked'))                   ,'\"banked\" must be a boolean'             , get('args') )  }",
+                    "name-must-not-be-empty": "{ assert(  not(isEmptyString(get('args.name')))                   ,'\"name\" must not be empty'               , get('args') )  }",
+                    "balance-must-be-greater-than-age": "{ assert(  cmpBigNum('gt',get('args.balance') ,get('args.age'))   ,'\"balance\" must be greater than \"age\"' , get('args') )  }"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

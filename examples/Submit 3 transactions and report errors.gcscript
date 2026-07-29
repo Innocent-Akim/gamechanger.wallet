@@ -1,0 +1,66 @@
+{
+  "type": "script",
+  "title": "Submit 3 transactions and report errors",
+  "description": "This example will build 3 transactions, sign and submit them without halting on errors, instead it will continue script execution to return any errors reported from the nodes",
+  "exportAs": "txErrors",
+  "return": {
+    "mode": "last"
+  },
+  "run": {
+    "buildA": {
+      "type": "buildTx",
+      "title": "Will succeed",
+      "tx": {}
+    },
+    "buildB": {
+      "type": "buildTx",
+      "title": "Will fail",
+      "tx": {
+        "ttl": {
+          "until": "0"
+        }
+      }
+    },
+    "buildC": {
+      "type": "buildTx",
+      "title": "Will also succeed",
+      "tx": {}
+    },
+    "sign": {
+      "detailedPermissions": false,
+      "type": "signTxs",
+      "txs": {
+        "A": "{get('cache.buildA.txHex')}",
+        "B": "{get('cache.buildB.txHex')}",
+        "C": "{get('cache.buildC.txHex')}"
+      }
+    },
+    "submit": {
+      "type": "submitTxs",
+      "mode": "noWait",
+      "noFail": true,
+      "extras": true,
+      "txs": "{get('cache.sign')}"
+    },
+    "finally": {
+      "type": "macro",
+      "run": {
+        "status": {
+          "A": "{get('cache.submit.txsExtended.A.status')}",
+          "B": "{get('cache.submit.txsExtended.B.status')}",
+          "C": "{get('cache.submit.txsExtended.C.status')}"
+        },
+        "txHashes": {
+          "A": "{get('cache.submit.txsExtended.A.txHash')}",
+          "B": "{get('cache.submit.txsExtended.B.txHash')}",
+          "C": "{get('cache.submit.txsExtended.C.txHash')}"
+        },
+        "errors": {
+          "A": "{get('cache.submit.txsExtended.A.error')}",
+          "B": "{get('cache.submit.txsExtended.B.error')}",
+          "C": "{get('cache.submit.txsExtended.C.error')}"
+        }
+      }
+    }
+  }
+}

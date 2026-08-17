@@ -1,0 +1,237 @@
+{
+  "title": "CIP-68 NFT Mint",
+  "description": "Mints a CIP-68 token pair under one native script policy: a (100) reference NFT that carries the metadata as an inline datum, and a (222) user NFT that the holder actually owns. Unlike CIP-25, the metadata lives in an eUTXO datum instead of transaction metadata, so it can be updated later by whoever controls the reference token. Every value a dapp would want to change is exposed as a flat argument. A GameChanger Wallet Dapp Demo. https://gamechanger.finance/",
+  "type": "script",
+  "exportAs": "CIP68Mint",
+  "require": {
+    "not": {
+      "walletTypeIn": [
+        "burner",
+        "gift"
+      ]
+    }
+  },
+  "return": {
+    "mode": "last"
+  },
+  "args": {
+    "asset-name": "GameChangerCIP68",
+    "display-name": "GameChanger CIP-68 NFT",
+    "image-uri": "ipfs://QmVWGxAKpB2Sxy3ZnfZsdt3gxocFEUUe8GPBcraLTZSQKT",
+    "media-type": "image/png",
+    "policy-lifetime-slots": "86400",
+    "reference-utxo-coin": "2000000",
+    "user-utxo-coin": "1500000"
+  },
+  "run": {
+    "argumentGuards": {
+      "type": "macro",
+      "run": {
+        "asset-name-must-be-a-string": "{ assert( isType('string',get('args.asset-name')) ,'asset-name must be a string' , get('args') ) }",
+        "asset-name-must-not-be-empty": "{ assert( not(isEmptyString(get('args.asset-name'))) ,'asset-name must not be empty' , get('args') ) }",
+        "display-name-must-not-be-empty": "{ assert( not(isEmptyString(get('args.display-name'))) ,'display-name must not be empty: it is the on-chain metadata name' , get('args') ) }",
+        "image-uri-must-not-be-empty": "{ assert( not(isEmptyString(get('args.image-uri'))) ,'image-uri must not be empty' , get('args') ) }",
+        "policy-lifetime-must-be-positive": "{ assert( cmpBigNum('gt',get('args.policy-lifetime-slots'),'0') ,'policy-lifetime-slots must be greater than zero' , get('args') ) }",
+        "reference-utxo-coin-must-clear-min-utxo": "{ assert( cmpBigNum('gte',get('args.reference-utxo-coin'),'1000000') ,'reference-utxo-coin must clear the min-UTxO floor' , get('args') ) }",
+        "user-utxo-coin-must-clear-min-utxo": "{ assert( cmpBigNum('gte',get('args.user-utxo-coin'),'1000000') ,'user-utxo-coin must clear the min-UTxO floor' , get('args') ) }"
+      }
+    },
+    "address": {
+      "type": "getCurrentAddress"
+    },
+    "addressInfo": {
+      "type": "macro",
+      "run": "{getAddressInfo(get('cache.address'))}"
+    },
+    "currentSlotNumber": {
+      "type": "getCurrentSlot"
+    },
+    "deadlineSlotNumber": {
+      "type": "macro",
+      "run": "{addBigNum(get('cache.currentSlotNumber'),get('args.policy-lifetime-slots'))}"
+    },
+    "assetNames": {
+      "type": "macro",
+      "run": {
+        "bare": "{strToHex(get('args.asset-name'))}",
+        "referenceLabel": "000643b0",
+        "userLabel": "000de140",
+        "referenceHex": "{join('',getArray('000643b0',strToHex(get('args.asset-name'))))}",
+        "userHex": "{join('',getArray('000de140',strToHex(get('args.asset-name'))))}"
+      }
+    },
+    "assetNameGuards": {
+      "type": "macro",
+      "run": {
+        "labelled-asset-name-must-fit-in-32-bytes": "{ assert( eq(get('cache.assetNames.referenceHex'),truncate(get('cache.assetNames.referenceHex'),64,0,'')) ,'CIP-68 label plus asset-name must not exceed 32 bytes (64 hex chars)' , get('cache.assetNames') ) }",
+        "audit-trail": "{ console('info',objToJson(get('cache.assetNames'))) }"
+      }
+    },
+    "mintingPolicy": {
+      "type": "nativeScript",
+      "script": {
+        "all": {
+          "issuer": {
+            "pubKeyHashHex": "{get('cache.addressInfo.paymentKeyHash')}"
+          },
+          "timeLock": {
+            "slotNumEnd": "{get('cache.deadlineSlotNumber')}"
+          }
+        }
+      }
+    },
+    "metadataKeys": {
+      "type": "macro",
+      "run": {
+        "name": "{strToHex('name')}",
+        "image": "{strToHex('image')}",
+        "mediaType": "{strToHex('mediaType')}",
+        "displayName": "{strToHex(get('args.display-name'))}",
+        "imageUri": "{strToHex(get('args.image-uri'))}",
+        "mediaTypeValue": "{strToHex(get('args.media-type'))}"
+      }
+    },
+    "metadatumDatum": {
+      "type": "plutusData",
+      "data": {
+        "fromJSON": {
+          "schema": 1,
+          "obj": {
+            "constructor": 0,
+            "fields": [
+              {
+                "map": [
+                  {
+                    "k": {
+                      "bytes": "{get('cache.metadataKeys.name')}"
+                    },
+                    "v": {
+                      "bytes": "{get('cache.metadataKeys.displayName')}"
+                    }
+                  },
+                  {
+                    "k": {
+                      "bytes": "{get('cache.metadataKeys.image')}"
+                    },
+                    "v": {
+                      "bytes": "{get('cache.metadataKeys.imageUri')}"
+                    }
+                  },
+                  {
+                    "k": {
+                      "bytes": "{get('cache.metadataKeys.mediaType')}"
+                    },
+                    "v": {
+                      "bytes": "{get('cache.metadataKeys.mediaTypeValue')}"
+                    }
+                  }
+                ]
+              },
+              {
+                "int": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    "build": {
+      "type": "buildTx",
+      "name": "built-CIP68Mint",
+      "title": "CIP-68 NFT Mint",
+      "description": "Mints the (100) reference NFT with its metadata datum and the matching (222) user NFT.",
+      "tx": {
+        "ttl": {
+          "until": "{get('cache.deadlineSlotNumber')}"
+        },
+        "mints": [
+          {
+            "policyId": "{get('cache.mintingPolicy.scriptHashHex')}",
+            "assets": [
+              {
+                "assetNameHex": "{get('cache.assetNames.referenceHex')}",
+                "quantity": "1"
+              },
+              {
+                "assetNameHex": "{get('cache.assetNames.userHex')}",
+                "quantity": "1"
+              }
+            ]
+          }
+        ],
+        "outputs": {
+          "referenceNFT": {
+            "address": "{get('cache.address')}",
+            "datum": {
+              "datumHex": "{get('cache.metadatumDatum.dataHex')}"
+            },
+            "assets": [
+              {
+                "policyId": "ada",
+                "assetName": "ada",
+                "quantity": "{get('args.reference-utxo-coin')}"
+              },
+              {
+                "policyId": "{get('cache.mintingPolicy.scriptHashHex')}",
+                "assetNameHex": "{get('cache.assetNames.referenceHex')}",
+                "quantity": "1"
+              }
+            ]
+          },
+          "userNFT": {
+            "address": "{get('cache.address')}",
+            "assets": [
+              {
+                "policyId": "ada",
+                "assetName": "ada",
+                "quantity": "{get('args.user-utxo-coin')}"
+              },
+              {
+                "policyId": "{get('cache.mintingPolicy.scriptHashHex')}",
+                "assetNameHex": "{get('cache.assetNames.userHex')}",
+                "quantity": "1"
+              }
+            ]
+          }
+        },
+        "requiredSigners": {
+          "issuer": "{get('cache.addressInfo.paymentKeyHash')}"
+        },
+        "witnesses": {
+          "nativeScripts": {
+            "mintingScript": "{get('cache.mintingPolicy.scriptHex')}"
+          }
+        },
+        "options": {
+          "changeOptimizer": "NO"
+        }
+      }
+    },
+    "sign": {
+      "type": "signTxs",
+      "namePattern": "signed-CIP68Mint",
+      "detailedPermissions": false,
+      "txs": [
+        "{get('cache.build.txHex')}"
+      ]
+    },
+    "submit": {
+      "type": "submitTxs",
+      "namePattern": "submitted-CIP68Mint",
+      "txs": "{get('cache.sign')}"
+    },
+    "finally": {
+      "type": "macro",
+      "run": {
+        "txHash": "{get('cache.build.txHash')}",
+        "policyId": "{get('cache.mintingPolicy.scriptHashHex')}",
+        "mintingScript": "{get('cache.mintingPolicy.scriptHex')}",
+        "canMintUntilSlotNumber": "{get('cache.deadlineSlotNumber')}",
+        "referenceAssetNameHex": "{get('cache.assetNames.referenceHex')}",
+        "userAssetNameHex": "{get('cache.assetNames.userHex')}",
+        "metadataDatumHex": "{get('cache.metadatumDatum.dataHex')}",
+        "metadataDatumHashHex": "{get('cache.metadatumDatum.dataHashHex')}"
+      }
+    }
+  }
+}

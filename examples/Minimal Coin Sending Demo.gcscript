@@ -18,7 +18,9 @@
       "run": {
         "to-address-must-not-be-empty": "{ assert( not(isEmptyString(get('args.to-address'))) ,'to-address must not be empty' , get('args') ) }",
         "policy-id-must-not-be-empty": "{ assert( not(isEmptyString(get('args.policy-id'))) ,'policy-id must not be empty, use ada for lovelaces' , get('args') ) }",
-        "quantity-must-be-positive": "{ assert( cmpBigNum('gt',get('args.quantity'),'0') ,'quantity must be greater than zero' , get('args') ) }"
+        "quantity-must-be-positive": "{ assert( cmpBigNum('gt',get('args.quantity'),'0') ,'quantity must be greater than zero' , get('args') ) }",
+        "asset-name-must-not-be-empty": "{ assert( not(isEmptyString(get('args.asset-name'))) ,'asset-name must not be empty, use ada for lovelaces' , get('args') ) }",
+        "ada-policy-needs-ada-asset-name": "{ assert( or(neq(get('args.policy-id'),'ada'),eq(get('args.asset-name'),'ada')) ,'when policy-id is ada, asset-name must be ada too' , get('args') ) }"
       }
     },
     {

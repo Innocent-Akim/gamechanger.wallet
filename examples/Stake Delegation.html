@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#080b17">
-<title>Cardano Dapp: undefined</title>
-<meta name="title" content="Cardano Dapp: undefined">
+<title>Cardano Dapp: "Stake Delegation"</title>
+<meta name="title" content="Cardano Dapp: "Stake Delegation"">
 <meta name="description" content="Review the action details below and continue in GameChanger Wallet.">
 
 <!-- Use for local deployments or for testing the library: -->
@@ -38,7 +38,7 @@
 <section class="hero">
 <div class="hero__top">
 <div>
-<h1 id="app-title">Cardano Dapp: undefined</h1>
+<h1 id="app-title">Cardano Dapp: "Stake Delegation"</h1>
 <p id="app-copy">Review the action details below and continue in GameChanger Wallet.</p>
 </div>
 <div class="hero__tools">
@@ -152,9 +152,9 @@
    */
   const app = createApp({
     config: {
-      id: 'gc-dapp-cardano-dapp',
+      id: 'gc-dapp-stake-delegation',
       version: '0.0.1',
-      title: 'Cardano Dapp: undefined',
+      title: 'Cardano Dapp: "Stake Delegation"',
       description: 'Review the action details below and continue in GameChanger Wallet.',
 
       /**
@@ -296,10 +296,12 @@
         //   }
         // },
         userIntent: {
-          "label": "Cardano Dapp",
-          "description": "Review the action details below and continue in GameChanger Wallet.",
+          "label": "Stake Delegation",
+          "description": "Registers the derived stake key and delegates it to a stake pool in a single transaction, then returns the delegated address so it can be funded. The target stake pool is exposed as a flat argument, so an auto-generated dapp can delegate to any pool without touching the code, and it is checked with assert() before the wallet builds anything. A GameChanger Wallet Dapp Demo. https://gamechanger.finance/",
           "code": {
             "type": "script",
+            "title": "Stake Delegation",
+            "description": "Registers the derived stake key and delegates it to a stake pool in a single transaction, then returns the delegated address so it can be funded. The target stake pool is exposed as a flat argument, so an auto-generated dapp can delegate to any pool without touching the code, and it is checked with assert() before the wallet builds anything. A GameChanger Wallet Dapp Demo. https://gamechanger.finance/",
             "require": {
               "not": {
                 "walletTypeIn": [
@@ -308,7 +310,22 @@
                 ]
               }
             },
+            "return": {
+              "mode": "last"
+            },
+            "args": {
+              "stake-pool-key-hash": "9eb76bb591d689dd06304c77c0df7871df76e768577e26af10d32b0c"
+            },
             "run": {
+              "argumentGuards": {
+                "type": "macro",
+                "run": {
+                  "stake-pool-key-hash-must-be-a-string": "{ assert( isType('string',get('args.stake-pool-key-hash')) ,'stake-pool-key-hash must be a string' , get('args') ) }",
+                  "stake-pool-key-hash-must-not-be-empty": "{ assert( not(isEmptyString(get('args.stake-pool-key-hash'))) ,'stake-pool-key-hash must not be empty' , get('args') ) }",
+                  "stake-pool-key-hash-must-be-56-chars": "{ assert( and(eq(get('args.stake-pool-key-hash'),truncate(get('args.stake-pool-key-hash'),56,0,'')),neq(get('args.stake-pool-key-hash'),truncate(get('args.stake-pool-key-hash'),55,0,''))) ,'stake-pool-key-hash must be exactly 28 bytes (56 hex chars)' , get('args') ) }",
+                  "stake-pool-key-hash-must-not-be-bech32": "{ assert( neq(truncate(get('args.stake-pool-key-hash'),4,0,''),'pool') ,'stake-pool-key-hash must be the raw hex pool key hash, not a bech32 pool id starting with \"pool1\"' , get('args') ) }"
+                }
+              },
               "dependencies": {
                 "type": "script",
                 "run": {
@@ -318,10 +335,6 @@
                   "addressInfo": {
                     "type": "macro",
                     "run": "{getAddressInfo(get('cache.dependencies.currentAddress'))}"
-                  },
-                  "PoolKeyHash": {
-                    "type": "data",
-                    "value": "9eb76bb591d689dd06304c77c0df7871df76e768577e26af10d32b0c"
                   },
                   "keys": {
                     "type": "deriveKeys",
@@ -376,7 +389,7 @@
                 "cert": {
                   "kind": "StakeDelegation",
                   "pubKeyHashHex": "{get('cache.dependencies.keys.StakeKey.pubKeyHashHex')}",
-                  "poolKeyHashHex": "{get('cache.dependencies.PoolKeyHash')}"
+                  "poolKeyHashHex": "{get('args.stake-pool-key-hash')}"
                 }
               },
               "txs": {
@@ -385,6 +398,7 @@
                   "buildDelegate": {
                     "type": "buildTx",
                     "name": "DelegateTx",
+                    "title": "Stake Delegation",
                     "tx": {
                       "certificates": [
                         {
@@ -410,6 +424,7 @@
               },
               "finally": {
                 "type": "script",
+                "args": "{get('args')}",
                 "exportAs": "SingleDelegate",
                 "run": {
                   "IMPORTANT": {
@@ -419,6 +434,14 @@
                   "address": {
                     "type": "macro",
                     "run": "{get('cache.dependencies.Address')}"
+                  },
+                  "rewardAddress": {
+                    "type": "macro",
+                    "run": "{get('cache.dependencies.RewardAddress')}"
+                  },
+                  "stakePoolKeyHash": {
+                    "type": "macro",
+                    "run": "{get('args.stake-pool-key-hash')}"
                   },
                   "txHash": {
                     "type": "macro",

@@ -32,7 +32,8 @@
         "send-quantity-must-be-positive": "{ assert( cmpBigNum('gt',get('args.send-quantity'),'0') ,'send-quantity must be greater than zero' , get('args') ) }",
         "send-quantity-must-not-exceed-mint": "{ assert( cmpBigNum('lte',get('args.send-quantity'),get('args.mint-quantity')) ,'send-quantity must not exceed mint-quantity' , get('args') ) }",
         "output-coin-must-clear-min-utxo": "{ assert( cmpBigNum('gte',get('args.output-coin'),'1000000') ,'output-coin must clear the min-UTxO floor' , get('args') ) }",
-        "policy-lifetime-must-be-positive": "{ assert( cmpBigNum('gt',get('args.policy-lifetime-slots'),'0') ,'policy-lifetime-slots must be greater than zero' , get('args') ) }"
+        "policy-lifetime-must-be-positive": "{ assert( cmpBigNum('gt',get('args.policy-lifetime-slots'),'0') ,'policy-lifetime-slots must be greater than zero' , get('args') ) }",
+        "media-type-must-not-be-empty": "{ assert( not(isEmptyString(get('args.media-type'))) ,'media-type must not be empty, CIP-25 requires a mediaType' , get('args') ) }"
       }
     },
     "dependencies": {

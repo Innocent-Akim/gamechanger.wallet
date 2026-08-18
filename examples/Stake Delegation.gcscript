@@ -22,7 +22,8 @@
       "run": {
         "stake-pool-key-hash-must-be-a-string": "{ assert( isType('string',get('args.stake-pool-key-hash')) ,'stake-pool-key-hash must be a string' , get('args') ) }",
         "stake-pool-key-hash-must-not-be-empty": "{ assert( not(isEmptyString(get('args.stake-pool-key-hash'))) ,'stake-pool-key-hash must not be empty' , get('args') ) }",
-        "stake-pool-key-hash-must-be-28-bytes": "{ assert( eq(get('args.stake-pool-key-hash'),truncate(get('args.stake-pool-key-hash'),56,0,'')) ,'stake-pool-key-hash must be 28 bytes (56 hex chars), not a bech32 pool id' , get('args') ) }"
+        "stake-pool-key-hash-must-be-56-chars": "{ assert( and(eq(get('args.stake-pool-key-hash'),truncate(get('args.stake-pool-key-hash'),56,0,'')),neq(get('args.stake-pool-key-hash'),truncate(get('args.stake-pool-key-hash'),55,0,''))) ,'stake-pool-key-hash must be exactly 28 bytes (56 hex chars)' , get('args') ) }",
+        "stake-pool-key-hash-must-not-be-bech32": "{ assert( neq(truncate(get('args.stake-pool-key-hash'),4,0,''),'pool') ,'stake-pool-key-hash must be the raw hex pool key hash, not a bech32 pool id starting with \"pool1\"' , get('args') ) }"
       }
     },
     "dependencies": {

@@ -1,49 +1,43 @@
+
 {
   "title": "Token-Gated Sign-In",
-  "description": "Backend-less 'sign in with Cardano' for holders only. The wallet blocks on an await/balance condition until the gating token is actually held, then signs a dapp-supplied nonce with CIP-8 and verifies its own signature before returning. The dapp learns the address, the proof and nothing else. Every gate parameter is a flat argument so a generated dapp renders it as a plain form. A GameChanger Wallet Dapp Demo. https://gamechanger.finance/",
+  "description": "Backend-less 'sign in with Cardano' for native asset holders only. The wallet blocks on an await/balance condition until the gating token is actually held, then signs a dapp-supplied nonce with CIP-8 and verifies its own signature before returning. The dapp learns the bare-minimum to verify: the realm, the address, the proof and nothing else.",
   "type": "script",
   "exportAs": "TokenGatedSignIn",
-  "require": {
-    "not": {
-      "walletTypeIn": [
-        "burner",
-        "gift"
-      ]
-    }
-  },
   "return": {
     "mode": "last"
   },
   "args": {
     "realm": "gamechanger-demo",
     "nonce": "1d5f9c2e-3a47-4d1b-9a6e-0c8f27b41ad3",
-    "gate-policy-id": "d491234d8b40b63aceab0d7329c6db111c3634d9e0d3c6166c66c13b",
-    "gate-asset-name": "FakeUSD",
-    "gate-quantity": "1"
+    "policy-id": "d491234d8b40b63aceab0d7329c6db111c3634d9e0d3c6166c66c13b",
+    "asset-name-hex": "{strToHex('FakeUSD')}",
+    "quantity": "1"
   },
   "run": {
-    "argumentGuards": {
+    "guards": {
       "type": "macro",
       "run": {
-        "nonce-must-be-a-string": "{ assert( isType('string',get('args.nonce')) ,'nonce must be a string' , get('args') ) }",
-        "nonce-must-not-be-empty": "{ assert( not(isEmptyString(get('args.nonce'))) ,'nonce must not be empty: a replayable login is not a login' , get('args') ) }",
-        "realm-must-not-be-empty": "{ assert( not(isEmptyString(get('args.realm'))) ,'realm must not be empty: it scopes the signature to one dapp' , get('args') ) }",
-        "gate-policy-id-must-not-be-empty": "{ assert( not(isEmptyString(get('args.gate-policy-id'))) ,'gate-policy-id must not be empty' , get('args') ) }",
-        "gate-policy-id-must-be-28-bytes": "{ assert( eq(get('args.gate-policy-id'),truncate(get('args.gate-policy-id'),56,0,'')) ,'gate-policy-id must be 28 bytes (56 hex chars)' , get('args') ) }",
-        "gate-quantity-must-be-positive": "{ assert( cmpBigNum('gt',get('args.gate-quantity'),'0') ,'gate-quantity must be greater than zero' , get('args') ) }"
+        "nonce-must-be-a-string": "{ assert( isType('string',get('args.nonce'))          ,'nonce must be a string'                                  , get('args') ) }",
+        "nonce-must-not-be-empty": "{ assert( not(isEmptyString(get('args.nonce')))       ,'nonce must not be empty: a replayable login is not a login' , get('args') ) }",
+        "realm-must-be-a-string": "{ assert( isType('string',get('args.realm'))          ,'realm must be a string'                                  , get('args') ) }",
+        "realm-must-not-be-empty": "{ assert( not(isEmptyString(get('args.realm')))       ,'realm must not be empty: it scopes the signature to one dapp' , get('args') ) }",
+        "policy-id-must-be-a-string": "{ assert( isType('string',get('args.policy-id'))    ,'gate policyId must be a string'                         , get('args.policy-id') ) }",
+        "policy-id-must-not-be-empty": "{ assert( not(isEmptyString(get('args.policy-id'))) ,'gate policyId must not be empty'                         , get('args.policy-id') ) }",
+        "asset-name-hex-must-be-a-string": "{ assert( isType('string',get('args.asset-name-hex'))  ,'gate assetName must be a string'                         , get('args.asset-name-hex') ) }",
+        "quantity-must-be-a-string": "{ assert( isType('string',get('args.quantity'))     ,'gate quantity must be a string'                          , get('args.quantity') ) }",
+        "quantity-must-be-gt-zero": "{ assert( cmpBigNum('gt',get('args.quantity'),'0')  ,'gate quantity must be greater than zero'                  , get('args.quantity') ) }"
       }
     },
-    "identity": {
-      "type": "script",
-      "run": {
-        "address": {
-          "type": "getCurrentAddress"
-        },
-        "addressInfo": {
-          "type": "macro",
-          "run": "{getAddressInfo(get('cache.identity.address'))}"
-        }
-      }
+    "networkInfo": {
+      "type": "getNetworkInfo"
+    },
+    "networkKey": {
+      "type": "macro",
+      "run": "{ join('-',get('cache.networkInfo.dltTag'),get('cache.networkInfo.networkTag')) }"
+    },
+    "address": {
+      "type": "getCurrentAddress"
     },
     "gate": {
       "type": "await",
@@ -51,32 +45,33 @@
         "holdsGatingToken": {
           "kind": "balance",
           "asset": {
-            "policyId": "{get('args.gate-policy-id')}",
-            "assetName": "{get('args.gate-asset-name')}",
-            "quantity": "{get('args.gate-quantity')}"
+            "policyId": "{get('args.policy-id')}",
+            "assetNameHex": "{get('args.asset-name-hex')}",
+            "quantity": "{get('args.quantity')}"
           }
         }
       }
     },
-    "challenge": {
+    "challengeText": {
       "type": "macro",
-      "run": {
-        "text": "{join(':',getArray(get('args.realm'),get('args.nonce'),get('cache.identity.addressInfo.paymentKeyHash')))}",
-        "hex": "{strToHex(join(':',getArray(get('args.realm'),get('args.nonce'),get('cache.identity.addressInfo.paymentKeyHash'))))}"
-      }
+      "run": "{join(':',getArray(get('cache.networkInfo.dltTag'),get('cache.networkInfo.networkTag'),get('args.realm'),get('args.nonce'),get('cache.address')))}"
+    },
+    "challengeHash": {
+      "type": "macro",
+      "run": "{sha512(get('cache.challengeText'))}"
     },
     "proof": {
       "type": "script",
       "run": {
         "signature": {
           "type": "signDataWithAddress",
-          "address": "{get('cache.identity.address')}",
-          "dataHex": "{get('cache.challenge.hex')}"
+          "address": "{get('cache.address')}",
+          "dataHex": "{get('cache.challengeHash')}"
         },
         "verified": {
           "type": "verifySignatureWithAddress",
-          "address": "{get('cache.identity.address')}",
-          "dataHex": "{get('cache.challenge.hex')}",
+          "address": "{get('cache.address')}",
+          "dataHex": "{get('cache.challengeHash')}",
           "dataSignature": "{get('cache.proof.signature')}"
         }
       }
@@ -85,20 +80,16 @@
       "type": "macro",
       "run": {
         "signature-must-verify": "{ assert( eq(get('cache.proof.verified'),true) ,'the wallet could not verify its own CIP-8 signature' , get('cache.proof') ) }",
-        "audit-trail": "{ console('info',get('cache.challenge.text')) }"
+        "audit-trail": "{ console('info',get('cache.challengeText')) }"
       }
     },
     "finally": {
       "type": "macro",
       "run": {
         "realm": "{get('args.realm')}",
-        "nonce": "{get('args.nonce')}",
-        "address": "{get('cache.identity.address')}",
-        "paymentKeyHash": "{get('cache.identity.addressInfo.paymentKeyHash')}",
-        "stakingKeyHash": "{get('cache.identity.addressInfo.stakingKeyHash')}",
-        "challengeHex": "{get('cache.challenge.hex')}",
-        "signature": "{get('cache.proof.signature')}",
-        "verified": "{get('cache.proof.verified')}"
+        "address": "{get('cache.address')}",
+        "challengeHash": "{get('cache.challengeHash')}",
+        "signature": "{get('cache.proof.signature')}"
       }
     }
   }

@@ -1,15 +1,8 @@
 {
   "title": "CIP-68 NFT Mint",
-  "description": "Mints a CIP-68 token pair under one native script policy: a (100) reference NFT that carries the metadata as an inline datum, and a (222) user NFT that the holder actually owns. Unlike CIP-25, the metadata lives in an eUTXO datum instead of transaction metadata, so it can be updated later by whoever controls the reference token. The datum follows the CIP-68 shape #6.121([metadata, version, extra]) with 'extra' set to Unit/Void. Every value a dapp would want to change is exposed as a flat argument, and after submitting, the wallet redirects to a block explorer that renders CIP-68 tokens so the result can be checked. TWO DELIBERATE SIMPLIFICATIONS, for example purposes: (1) the (100) reference NFT is sent to the user's own wallet address with the datum attached, instead of being locked at a script as CIP-68 describes, so metadata updates depend on the issuer's key rather than on script logic; (2) uniqueness of the reference NFT rests on issuer behaviour plus the policy time-lock, not on a one-shot policy that consumes a specific UTXO, so the policy could technically mint another (100) token before it expires. A production issuer should lock the reference NFT at a script and use a one-shot policy. Gift wallets are rejected because their signing key travels inside the share URL, which is not a sound anchor for a minting policy the issuer is expected to keep control of; burner wallets are allowed so the example stays runnable in a developer environment. A GameChanger Wallet Dapp Demo. https://gamechanger.finance/",
+  "description": "Mints a CIP-68 token pair under one native script policy: a (100) reference NFT that carries the metadata as an inline datum, and a (222) user NFT that the holder actually owns. Unlike CIP-25, the metadata lives in an eUTXO datum instead of transaction metadata, so it can be updated later by whoever controls the reference token under the script-controlled address that holds it. The datum follows the CIP-68 shape #6.121([metadata, version, extra]) with 'extra' set to Unit/Void. Every value a dapp would want to change is exposed as a flat argument, and after submitting, the wallet redirects to a block explorer that renders CIP-68 tokens so the result can be checked. ONE DELIBERATE SIMPLIFICATION, for example purposes: uniqueness of the reference NFT rests on issuer behaviour plus the policy time-lock, not on a one-shot policy that consumes a specific UTXO, so the policy could technically mint another (100) token before it expires. A production issuer should use a one-shot minting policy. ",
   "type": "script",
   "exportAs": "CIP68Mint",
-  "require": {
-    "not": {
-      "walletTypeIn": [
-        "gift"
-      ]
-    }
-  },
   "return": {
     "mode": "last"
   },
@@ -41,7 +34,7 @@
         "asset-name-must-not-be-empty": "{ assert( not(isEmptyString(get('args.asset-name'))) ,'asset-name must not be empty' , get('args') ) }",
         "display-name-must-not-be-empty": "{ assert( not(isEmptyString(get('args.display-name'))) ,'display-name must not be empty: it is the on-chain metadata name' , get('args') ) }",
         "image-uri-must-not-be-empty": "{ assert( not(isEmptyString(get('args.image-uri'))) ,'image-uri must not be empty' , get('args') ) }",
-        "policy-lifetime-must-be-positive": "{ assert( cmpBigNum('gt',get('args.policy-lifetime-slots'),'0') ,'policy-lifetime-slots must be greater than zero' , get('args') ) }"
+        "policy-lifetime-must-be-gt-than-zero": "{ assert( cmpBigNum('gt',get('args.policy-lifetime-slots'),'0') ,'policy-lifetime-slots must be greater than zero' , get('args') ) }"
       }
     },
     "networkInfo": {
@@ -58,7 +51,8 @@
     "networkGuards": {
       "type": "macro",
       "run": {
-        "network-must-be-supported": "{ assert( not(isType('undefined',get('cache.network.nft-viewer-URL'))) ,'this dapp has no NFT viewer configured for the connected network' , get('cache.networkKey') ) }"
+        "network-must-be-supported": "{ assert( not(isType('null',get('cache.network'))) ,'this dapp has no data configured for the connected network' , get('cache.networkKey') ) }",
+        "nft-viewer-url-must-be-provided": "{ assert( not(isEmptyString(get('cache.network.nft-viewer-URL'))) ,'this dapp has no NFT viewer configured for the connected network' , get('cache.networkKey') ) }"
       }
     },
     "address": {
@@ -102,6 +96,13 @@
           }
         }
       }
+    },
+    "scriptAddress": {
+        "type": "buildAddress",
+        "name":"ScriptAddressForUser",
+        "addr": {
+            "spendScriptHashHex": "{get('cache.mintingPolicy.scriptHashHex')}"
+        }
     },
     "metadataKeys": {
       "type": "macro",
@@ -189,7 +190,7 @@
         ],
         "outputs": {
           "referenceNFT": {
-            "address": "{get('cache.address')}",
+            "address": "{get('cache.scriptAddress')}",
             "datum": {
               "datumHex": "{get('cache.metadatumDatum.dataHex')}"
             },
@@ -242,6 +243,7 @@
         "txHash": "{get('cache.build.txHash')}",
         "policyId": "{get('cache.mintingPolicy.scriptHashHex')}",
         "mintingScript": "{get('cache.mintingPolicy.scriptHex')}",
+        "scriptAddress": "{get('cache.scriptAddress')}",
         "canMintUntilSlotNumber": "{get('cache.deadlineSlotNumber')}",
         "referenceAssetNameHex": "{get('cache.assetNames.referenceHex')}",
         "userAssetNameHex": "{get('cache.assetNames.userHex')}",

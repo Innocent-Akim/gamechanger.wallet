@@ -4,6 +4,14 @@
   "title": "Stake Delegation",
   "description": "Registers the derived stake key and delegates it to a stake pool in a single transaction, then returns the delegated address so it can be funded. The target stake pool is exposed as a flat argument, so an auto-generated dapp can delegate to any pool without touching the code, and it is checked with assert() before the wallet builds anything. A GameChanger Wallet Dapp Demo. https://gamechanger.finance/",
   "exportAs": "SingleDelegate",
+  "require": {
+    "not": {
+      "walletTypeIn": [
+        "burner",
+        "gift"
+      ]
+    }
+  },
   "return": {
     "mode": "last"
   },
